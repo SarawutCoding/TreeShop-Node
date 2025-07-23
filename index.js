@@ -75,7 +75,58 @@ app.post('/register', ifLoggedIn, [
             old_data: req.body
         })
     }
+});
+
+app.post('/', ifLoggedIn , [
+    body('user_email').custom((value)=>{
+        return cone.execute('select email from users where email = ?', [value])
+        .then(([rows]) => {
+            if (rows.length == 1) {
+                return true;
+            }
+            return Promise.reject('Invalid Email Address')
+        });
+
+    }),
+    body('user_password', 'Password is empty').trim().not().isEmpty()
+], (req, res)=>{
+    const validation_result = validationResult(req);
+    const {user_password, user_email} = req.body;
+    if (validation_result.isEmpty()) {
+        cone.execute('select * from users where email = ?', [user_email])
+        .then(([rows]) => {
+            bcrypt.compare(user_password, rows[0].password).then(compare_result => {
+                if (compare_result === true) {
+                    req.session.isLoggedIn = true;
+                    req.session.userID = rows[0].id;
+                    res.redirect('/');
+                } else{
+                    res.render('login-register', {
+                        login_errors: ['Invalid Password']
+                    })
+                }
+            }).catch(err => {
+                if (err) throw err;
+            })
+        }).catch(err => {
+                if (err) throw err;
+        })
+    } else {
+        let allError = validation_result.array().map((error) => { // 💡 แก้ไขตรงนี้: ใช้ .array()
+            return error.msg;
+        });
+
+        res.render('login-register', {
+            login_errors: allError
+        })
+    }
+});
+
+app.get('/logout', (req, res) => {
+    req.session = null;
+    res.redirect('/');
 })
+
 const port = 3000;
 
 app.listen(port,()=>{
