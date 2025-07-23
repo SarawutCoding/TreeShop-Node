@@ -19,14 +19,14 @@ app.use(cookieSession({
 
 const ifNotLoggedIn = (req, res, next) => {
     if (!req.session.isLoggedIn) {
-        return res.render('login-register');
+        return res.render('log-reg/login-register');
     }
     next();
 }
 
 const ifLoggedIn = (req, res, next) => {
     if (req.session.isLoggedIn) {
-        return res.redirect('/home');
+        return res.redirect('/');
     }
     next();
 }
@@ -70,7 +70,7 @@ app.post('/register', ifLoggedIn, [
             return error.msg;
         });
 
-        res.render('login-register', {
+        res.render('log-reg/login-register', {
             register_error: allError,
             old_data: req.body
         })
@@ -101,7 +101,7 @@ app.post('/', ifLoggedIn , [
                     req.session.userID = rows[0].id;
                     res.redirect('/');
                 } else{
-                    res.render('login-register', {
+                    res.render('log-reg/login-register', {
                         login_errors: ['Invalid Password']
                     })
                 }
@@ -116,7 +116,7 @@ app.post('/', ifLoggedIn , [
             return error.msg;
         });
 
-        res.render('login-register', {
+        res.render('log-reg/login-register', {
             login_errors: allError
         })
     }
@@ -125,7 +125,7 @@ app.post('/', ifLoggedIn , [
 app.get('/logout', (req, res) => {
     req.session = null;
     res.redirect('/');
-})
+});
 
 const port = 3000;
 
